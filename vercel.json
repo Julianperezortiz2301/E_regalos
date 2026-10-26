@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "functions": {
+    "app.js": {
+      "includeFiles": "{admin.html,public/index.html,certs/**}",
+      "maxDuration": 30
+    }
+  }
+}

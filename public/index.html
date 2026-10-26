@@ -1,0 +1,152 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Elige regalos para momentos especiales y haz tu pedido por WhatsApp." />
+    <title>E-regalos | Catálogo de regalos</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/categorias.js" defer></script>
+    <script src="/carrito.js" defer></script>
+  </head>
+  <body>
+    <!-- persona una: navegación y portada. Solo HTML y CSS, adaptados a celular. -->
+    <a class="skip-link" href="#catalogo">Ir al catálogo</a>
+    <header class="header">
+      <div class="container header-content">
+        <a href="#inicio" class="logo" aria-label="E-regalos, inicio">E-regalos</a>
+        <nav class="nav" aria-label="Menú principal">
+          <a href="#inicio">Inicio</a>
+          <a href="#catalogo">Catálogo</a>
+          <a href="#nosotros">Nosotros</a>
+        </nav>
+        <button class="btn-primary" id="abrir-carrito" type="button">Carrito (<span id="cantidad-carrito">0</span>)</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="container hero-content">
+          <div class="hero-text">
+            <h1>Regalos para cada ocasión</h1>
+            <p>Encuentra detalles para cumpleaños, aniversarios y otras fechas especiales.</p>
+            <a href="#catalogo" class="btn-primary">Ver catálogo</a>
+          </div>
+          <div class="hero-image">
+            <img src="/imagenes/snoopy-frente.png" alt="Snoopy de crochet blanco con bufanda roja sobre fondo beige" fetchpriority="high" />
+          </div>
+        </div>
+      </section>
+
+      <!-- persona dos: categorías, filtros y catálogo. Los datos llegan con GET. -->
+      <section class="catalog-section container" id="catalogo" aria-labelledby="titulo-catalogo">
+        <div class="section-heading">
+          <div>
+            <h2 id="titulo-catalogo">Catálogo de regalos</h2>
+            <p>Busca un regalo o elige una categoría.</p>
+          </div>
+          <button type="button" class="btn-secondary" id="recargar">Actualizar catálogo</button>
+        </div>
+        <noscript><p class="notice error">Activa JavaScript para consultar los regalos y usar el carrito.</p></noscript>
+        <div class="category-list" id="categorias" role="group" aria-label="Filtrar por categoría"></div>
+        <form id="filtros" class="filters" role="search">
+          <label class="search-field" for="buscar">Buscar regalo
+            <input type="search" id="buscar" placeholder="Nombre o descripción del regalo…" maxlength="100" />
+          </label>
+          <label for="filtro-ocasion">Ocasión
+            <select id="filtro-ocasion"><option value="">Todas las ocasiones</option></select>
+          </label>
+          <label for="orden">Ordenar por
+            <select id="orden">
+              <option value="recientes">Más recientes</option>
+              <option value="menor">Menor precio</option>
+              <option value="mayor">Mayor precio</option>
+              <option value="nombre">Nombre: A a Z</option>
+            </select>
+          </label>
+        </form>
+        <div class="results-bar">
+          <p id="estado" role="status" aria-live="polite" tabindex="-1">Cargando regalos…</p>
+          <button class="text-button" type="button" id="limpiar">Limpiar filtros</button>
+        </div>
+        <p id="aviso" class="notice" role="status" aria-live="polite" hidden></p>
+        <div id="productos" class="products-grid" aria-busy="true"></div>
+        <p class="photo-caption">Imágenes de referencia para el catálogo.</p>
+        <div id="vacio" class="empty-state" hidden>
+          <h3 id="vacio-titulo">No encontramos regalos</h3>
+          <p id="vacio-texto">Prueba con otro nombre o limpia los filtros.</p>
+        </div>
+      </section>
+
+      <!-- persona una: plantilla de tarjeta. JavaScript rellena el texto sin insertar HTML del usuario. -->
+      <template id="tarjeta-regalo">
+        <article class="product-card">
+          <!-- persona una: foto principal y miniaturas para regalos con varias vistas. -->
+          <div class="product-gallery">
+            <img class="product-photo" alt="" loading="lazy" width="600" height="600" hidden />
+            <p class="photo-empty">Sin foto disponible</p>
+            <div class="photo-thumbnails" role="group" aria-label="Elegir foto del regalo" hidden></div>
+          </div>
+          <div class="product-content">
+            <div class="product-tags"><span class="category-tag"></span><span class="occasion-tag"></span></div>
+            <h3 class="product-name"></h3>
+            <p class="product-description"></p>
+            <div class="price-row"><strong class="product-price"></strong><span>COP</span></div>
+            <div class="card-actions">
+              <button class="btn-primary" type="button" data-agregar>Agregar al carrito</button>
+            </div>
+          </div>
+        </article>
+      </template>
+
+      <!-- persona una: carrito con cantidades, subtotales y un total visible. -->
+      <dialog id="dialogo-carrito" aria-labelledby="titulo-carrito">
+        <div class="dialog-heading"><h2 id="titulo-carrito">Tu carrito</h2><button type="button" class="close-button" data-cerrar-carrito aria-label="Cerrar carrito">×</button></div>
+        <p id="aviso-carrito" class="form-error" role="status" aria-live="polite"></p>
+        <p id="carrito-vacio">Tu carrito está vacío. Agrega un regalo para comenzar.</p>
+        <ul id="lista-carrito" class="cart-list"></ul>
+        <div id="resumen-carrito" hidden>
+          <div class="cart-total"><strong>Total de productos</strong><strong id="total-carrito"></strong></div>
+          <p class="cart-note">El envío, la disponibilidad y la forma de pago se confirman por WhatsApp.</p>
+          <button class="text-button" id="vaciar-carrito" type="button">Vaciar carrito</button>
+        </div>
+        <!-- persona tres: pide solo el nombre y una nota para preparar el mensaje. -->
+        <form id="formulario-pedido" hidden>
+          <label for="nombre-cliente">Tu nombre *</label>
+          <input id="nombre-cliente" name="nombre" autocomplete="given-name" maxlength="80" required />
+          <label for="nota-pedido">Nota para el pedido <span class="optional">(opcional)</span></label>
+          <textarea id="nota-pedido" name="nota" rows="2" maxlength="300" placeholder="Por ejemplo, la fecha o el mensaje para el regalo"></textarea>
+          <div class="dialog-actions"><button class="btn-whatsapp" id="pedir-whatsapp" type="submit" disabled>Pedir por WhatsApp</button></div>
+          <p class="cart-note">Se abrirá WhatsApp con tu pedido preparado. Revisa el mensaje y pulsa Enviar para contactarnos.</p>
+        </form>
+        <div class="dialog-actions"><button class="btn-secondary" type="button" data-cerrar-carrito>Seguir comprando</button></div>
+      </dialog>
+
+      <template id="fila-carrito">
+        <li class="cart-item">
+          <div class="cart-detail"><strong class="cart-name"></strong><p class="cart-price"></p></div>
+          <div class="cart-quantity">
+            <button type="button" class="btn-secondary" data-cantidad="-1">−</button>
+            <span class="cart-count"></span>
+            <button type="button" class="btn-secondary" data-cantidad="1">+</button>
+          </div>
+          <strong class="cart-subtotal"></strong>
+          <button type="button" class="delete-button" data-quitar>Quitar</button>
+        </li>
+      </template>
+
+      <!-- persona una: explicación de la compra y acceso separado a administración. -->
+      <section class="about-section" id="nosotros">
+        <div class="container">
+          <h2>Sobre E-regalos</h2>
+          <p>Elige un detalle, agrégalo al carrito y envíanos tu pedido por WhatsApp. Allí acordamos la entrega y la forma de pago contigo.</p>
+        </div>
+      </section>
+    </main>
+    <footer class="container footer-content">
+      <div><a href="#inicio" class="logo">E-regalos</a><p>Regalos para fechas especiales.</p></div>
+      <div class="footer-info"><p>© 2026 E-regalos</p><a href="/admin">Administración</a></div>
+    </footer>
+  </body>
+</html>

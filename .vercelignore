@@ -1,0 +1,16 @@
+# persona cuatro: publica el sitio sin claves, pruebas ni archivos locales.
+.env
+.env.*
+.npm-cache/
+.vercel-auth/
+.deploy/
+.verification/
+.vscode/
+node_modules/
+docs/
+tests/
+sql/
+README.md
+Dockerfile
+compose.yaml
+.dockerignore

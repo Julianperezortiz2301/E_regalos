@@ -1,0 +1,23 @@
+{
+  "name": "e-regalos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Catálogo de regalos con HTML, CSS, JavaScript, Express y PostgreSQL",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --env-file-if-exists=.env --watch server.js",
+    "test": "node --test tests/app.test.js",
+    "test:db": "node --env-file-if-exists=.env --test tests/database.test.js"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "supertest": "7.3.1"
+  }
+}

@@ -1,0 +1,138 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Encuentra, organiza y personaliza tu catálogo de regalos para momentos especiales." />
+    <title>E-regalos | Administración</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/categorias.js" defer></script>
+    <script src="/admin.js" defer></script>
+  </head>
+  <body data-admin="true">
+    <!-- persona una: navegación y portada. Solo HTML y CSS, adaptados a celular. -->
+    <a class="skip-link" href="#catalogo">Ir al catálogo</a>
+    <header class="header">
+      <div class="container header-content">
+        <a href="/" class="logo">E-regalos · Admin</a>
+        <nav class="nav" aria-label="Menú de administración"><a href="/">Ver tienda</a><a href="#catalogo">Administrar regalos</a></nav>
+        <button class="btn-primary" id="nuevo-regalo" type="button" disabled>Nuevo regalo</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- persona dos: categorías, filtros y catálogo. Los datos llegan con GET. -->
+      <section class="catalog-section container" id="catalogo" aria-labelledby="titulo-catalogo">
+        <div class="section-heading">
+          <div>
+            <h1 id="titulo-catalogo">Administrar regalos</h1>
+            <p>Crea, edita o elimina regalos del catálogo de la tienda.</p>
+          </div>
+          <button type="button" class="btn-secondary" id="recargar">Actualizar catálogo</button>
+        </div>
+        <noscript><p class="notice error">Activa JavaScript para consultar y administrar los regalos.</p></noscript>
+        <div class="category-list" id="categorias" role="group" aria-label="Filtrar por categoría"></div>
+        <form id="filtros" class="filters" role="search">
+          <label class="search-field" for="buscar">Buscar regalo
+            <input type="search" id="buscar" placeholder="Nombre o descripción del regalo…" maxlength="100" />
+          </label>
+          <label for="filtro-ocasion">Ocasión
+            <select id="filtro-ocasion"><option value="">Todas las ocasiones</option></select>
+          </label>
+          <label for="orden">Ordenar por
+            <select id="orden">
+              <option value="recientes">Más recientes</option>
+              <option value="menor">Menor precio</option>
+              <option value="mayor">Mayor precio</option>
+              <option value="nombre">Nombre: A a Z</option>
+            </select>
+          </label>
+        </form>
+        <div class="results-bar">
+          <p id="estado" role="status" aria-live="polite" tabindex="-1">Cargando regalos…</p>
+          <button class="text-button" type="button" id="limpiar">Limpiar filtros</button>
+        </div>
+        <p id="aviso" class="notice" role="status" aria-live="polite" hidden></p>
+        <div id="productos" class="products-grid" aria-busy="true"></div>
+        <p class="photo-caption">Imágenes de referencia para el catálogo.</p>
+        <div id="vacio" class="empty-state" hidden>
+          <h3 id="vacio-titulo">No encontramos regalos</h3>
+          <p id="vacio-texto">Prueba con otro nombre o limpia los filtros.</p>
+        </div>
+      </section>
+
+      <!-- persona una: plantilla de tarjeta. JavaScript rellena el texto sin insertar HTML del usuario. -->
+      <template id="tarjeta-regalo">
+        <article class="product-card">
+          <!-- persona una: foto principal y miniaturas para regalos con varias vistas. -->
+          <div class="product-gallery">
+            <img class="product-photo" alt="" loading="lazy" width="600" height="600" hidden />
+            <p class="photo-empty">Sin foto disponible</p>
+            <div class="photo-thumbnails" role="group" aria-label="Elegir foto del regalo" hidden></div>
+          </div>
+          <div class="product-content">
+            <div class="product-tags"><span class="category-tag"></span><span class="occasion-tag"></span></div>
+            <h3 class="product-name"></h3>
+            <p class="product-description"></p>
+            <div class="price-row"><strong class="product-price"></strong><span>COP</span></div>
+            <div class="card-actions">
+              <button class="btn-secondary" type="button" data-accion="editar">Editar</button>
+              <button class="text-button" type="button" data-accion="precio">Cambiar precio</button>
+              <button class="delete-button" type="button" data-accion="eliminar">Eliminar</button>
+            </div>
+          </div>
+        </article>
+      </template>
+
+      <!-- persona tres: un mismo formulario sirve para crear (POST) y editar (PUT). -->
+      <dialog id="dialogo-regalo" aria-labelledby="titulo-formulario">
+        <form id="formulario-regalo">
+          <div class="dialog-heading"><h2 id="titulo-formulario">Nuevo regalo</h2><button type="button" class="close-button" data-cerrar aria-label="Cerrar formulario">×</button></div>
+          <p class="form-intro">Completa los datos del regalo. Los campos con * son obligatorios.</p>
+          <label for="nombre">Nombre del regalo <span aria-hidden="true">*</span></label>
+          <input id="nombre" name="nombre" maxlength="100" placeholder="Ej. Caja de chocolates" required />
+          <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
+          <textarea id="descripcion" name="descripcion" rows="3" maxlength="500" placeholder="¿Qué incluye este detalle?"></textarea>
+          <label for="precio">Precio en pesos colombianos <span aria-hidden="true">*</span></label>
+          <input id="precio" name="precio" type="number" min="0.01" max="99999999.99" step="0.01" placeholder="35000" required />
+          <div class="form-columns">
+            <div><label for="categoria">Categoría <span aria-hidden="true">*</span></label><select id="categoria" name="categoria_id" required></select></div>
+            <div><label for="ocasion">Ocasión <span aria-hidden="true">*</span></label><select id="ocasion" name="ocasion_id" required></select></div>
+          </div>
+          <p id="error-formulario" class="form-error" role="alert"></p>
+          <div class="dialog-actions"><button type="button" class="btn-secondary" data-cerrar>Cancelar</button><button type="submit" class="btn-primary">Guardar regalo</button></div>
+        </form>
+      </dialog>
+
+      <!-- persona tres: cambiar solo el precio muestra el uso práctico de PATCH. -->
+      <dialog id="dialogo-precio" aria-labelledby="titulo-precio">
+        <form id="formulario-precio">
+          <div class="dialog-heading"><h2 id="titulo-precio">Cambiar precio</h2><button type="button" class="close-button" data-cerrar aria-label="Cerrar cambio de precio">×</button></div>
+          <p id="nombre-precio" class="form-intro"></p>
+          <label for="precio-rapido">Nuevo precio en pesos colombianos</label>
+          <input id="precio-rapido" type="number" min="0.01" max="99999999.99" step="0.01" required />
+          <p id="error-precio" class="form-error" role="alert"></p>
+          <div class="dialog-actions"><button type="button" class="btn-secondary" data-cerrar>Cancelar</button><button type="submit" class="btn-primary">Guardar precio</button></div>
+        </form>
+      </dialog>
+
+      <!-- persona cuatro: confirmación antes de enviar DELETE. Cancelar conserva el regalo. -->
+      <dialog id="dialogo-eliminar" aria-labelledby="titulo-eliminar">
+        <form id="formulario-eliminar">
+          <div class="dialog-heading"><h2 id="titulo-eliminar">¿Eliminar este regalo?</h2><button type="button" class="close-button" data-cerrar aria-label="Cerrar confirmación">×</button></div>
+          <p id="nombre-eliminar" class="form-intro"></p>
+          <p>Se quitará del catálogo. Esta acción no se puede deshacer.</p>
+          <p id="error-eliminar" class="form-error" role="alert"></p>
+          <div class="dialog-actions"><button type="button" class="btn-secondary" data-cerrar autofocus>Conservar regalo</button><button type="submit" class="btn-danger">Sí, eliminar</button></div>
+        </form>
+      </dialog>
+
+      <!-- persona una: cierre de la página y acceso a la comprobación de conexión. -->
+    </main>
+    <footer class="container footer-content">
+      <div><a href="/" class="logo">E-regalos</a><p>Regalos para fechas especiales.</p></div>
+      <div class="footer-info"><p>© 2026 E-regalos</p><button type="button" class="text-button" id="comprobar-conexion">Comprobar conexión</button><p id="estado-conexion" role="status" aria-live="polite"></p></div>
+    </footer>
+  </body>
+</html>
